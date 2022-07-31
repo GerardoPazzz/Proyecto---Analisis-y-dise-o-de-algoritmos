@@ -13,12 +13,12 @@ matrizPrueba2=[[max_Int,4,2,max_Int,max_Int,max_Int],
                [max_Int,5,8,max_Int,2,6],
                [max_Int,max_Int,10,2,max_Int,2],
                [max_Int,max_Int,max_Int,6,2,max_Int]]"""
-# 0 -> vacio, 1 -> camino, 2 -> cesped, 3 -> agua, 4 -> bosque, 5 -> pared
-grid = [[2,5,2,2,2],
-       [2,2,2,5,2],
-       [2,5,2,5,2],
-       [2,5,2,5,2],
-       [2,5,2,2,2]]
+# 1 -> vacio, 2 -> camino, 3 -> cesped, 4 -> agua, 5 -> bosque, 6 -> pared
+grid = [[3,3,3,3,3,3,3],
+       [3,3,6,6,6,6,3],
+       [3,6,3,6,3,3,3],
+       [3,3,3,6,3,6,3],
+       [3,6,3,3,3,3,3]]
 # Variables de algoritmo
 grafo = convertir_grid(grid)
 inicio, final = ((0, 0), (4, 2))

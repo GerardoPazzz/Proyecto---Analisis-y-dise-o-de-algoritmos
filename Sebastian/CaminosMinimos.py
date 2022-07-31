@@ -17,8 +17,8 @@ def pintar_grafo_en_consola(grid):
     for fil in range(len(grid)):
         for col in range(len(grid[fil])):
             peso, signo = grid[fil][col]
-            COLOR = BLOQUE_AMARILLO if peso == 1 else BLOQUE_VERDE if peso == 2 else BLOQUE_AZUL if peso == 3 else \
-                BLOQUE_VERDEOSCURO if peso == 4 else BLOQUE_PARED if peso == 5 else ""
+            COLOR = BLOQUE_AMARILLO if peso == 2 else BLOQUE_VERDE if peso == 3 else BLOQUE_AZUL if peso == 4 else \
+                BLOQUE_VERDEOSCURO if peso == 5 else BLOQUE_PARED if peso == 6 else ""
             print(COLOR,signo,RESETEAR,sep="",end=" ")
         print()
     pass
@@ -33,11 +33,11 @@ def convertir_grid(grid):
     direcciones = [(1, 0), (-1, 0), (0, 1), (0, -1)]
     for j, fila in enumerate(grid):
         for i, columna in enumerate(fila):
-            if grid[j][i] < 5:
+            if grid[j][i] < 6:
                 nodos_vecinos = []
                 for x, y in direcciones:
                     newx, newy = x+i, y+j
-                    if 0 <= newx < len(fila) and 0 <= newy < len(grid) and grid[newy][newx]!= 5:
+                    if 0 <= newx < len(fila) and 0 <= newy < len(grid) and grid[newy][newx]!= 6:
                         nodos_vecinos.append(((newx, newy), grid[newy][newx]))
                 grafo[(i, j)] = nodos_vecinos
     return grafo
