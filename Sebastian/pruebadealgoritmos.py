@@ -1,4 +1,7 @@
+import time
 from CaminosMinimos import *
+# Declaracion de matrices para pruebas
+"""
 matrizPrueba=[[0,4,8,max_Int,max_Int],
               [4,0,1,2,max_Int],
               [8,1,0,4,2],
@@ -9,9 +12,28 @@ matrizPrueba2=[[max_Int,4,2,max_Int,max_Int,max_Int],
                [2,1,max_Int,8,10,max_Int],
                [max_Int,5,8,max_Int,2,6],
                [max_Int,max_Int,10,2,max_Int,2],
-               [max_Int,max_Int,max_Int,6,2,max_Int]]
-grid=[[0,0,0],
-      [0,5,0],
-      [0,0,0]]
-print(Dijkstra_v2((0,0),(2,2),convertir_grid(grid)))
-
+               [max_Int,max_Int,max_Int,6,2,max_Int]]"""
+# 0 -> vacio, 1 -> camino, 2 -> cesped, 3 -> agua, 4 -> bosque, 5 -> pared
+grid = [[2,5,2,2,2],
+       [2,2,2,5,2],
+       [2,5,2,5,2],
+       [2,5,2,5,2],
+       [2,5,2,2,2]]
+# Codigo
+grafo = convertir_grid(grid)
+inicio, final = ((0, 0), (4, 2))
+costo_minimo = {inicio: 0}
+recorrido_de_nodos = {inicio: None}
+nodos_visitados = []
+nodo_actual = inicio
+camino=[]
+while True:
+    limpiar_consola()
+    if nodo_actual != final:
+        costo_minimo,recorrido_de_nodos,nodos_visitados,nodo_actual,camino=\
+            Dijkstra_v3(costo_minimo,recorrido_de_nodos,nodos_visitados,nodo_actual,grafo)
+    #print(camino)
+    pintar_grafo_en_consola([[(grid[fil][col]," I " if (col,fil) == inicio else " F " if (col,fil) == final else
+    " C " if (col,fil) in camino else " V " if (col,fil) in nodos_visitados else "   ")
+    for col in range(len(grid[fil]))]for fil in range(len(grid))])
+    time.sleep(0.5)
