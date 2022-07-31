@@ -19,7 +19,7 @@ grid = [[2,5,2,2,2],
        [2,5,2,5,2],
        [2,5,2,5,2],
        [2,5,2,2,2]]
-# Codigo
+# Variables de algoritmo
 grafo = convertir_grid(grid)
 inicio, final = ((0, 0), (4, 2))
 costo_minimo = {inicio: 0}
@@ -27,6 +27,7 @@ recorrido_de_nodos = {inicio: None}
 nodos_visitados = []
 nodo_actual = inicio
 camino=[]
+# Bucle de algoritmo y graficos en consola
 while True:
     limpiar_consola()
     if nodo_actual != final:
