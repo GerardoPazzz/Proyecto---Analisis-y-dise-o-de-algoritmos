@@ -1,8 +1,6 @@
 import tkinter
 
-GRIS_OSCURO = "#1F2022"  # color del fondo en hexadecimal
 ventana = tkinter.Tk()
-ventana.title("Proyecto Dijkstra")
 #ventana.geometry("800x600")
 #etiqueta=tkinter.Label(ventana,text="PROYECTO DE CURSO")
 #etiqueta.pack(side=tkinter.BOTTOM) # -> decirle que aparezca en pantalla
@@ -11,24 +9,34 @@ ventana.title("Proyecto Dijkstra")
 #txtfield=tkinter.Entry(ventana,font="Arial 20")
 #txtfield.pack()
 
-#Configuraciones del grid en ventana
+#Configuraciones del editor de mapa (Grafo)
 GRID_ALTO=26
 GRID_ANCHO=26
 TAMAÑO_DE_SPRITE=16
 tile_cesped = tkinter.PhotoImage(file="imagenes/cesped.png")
 tile_basico_pared = tkinter.PhotoImage(file="imagenes/basico_pared.png")
 tile_basico_suelo = tkinter.PhotoImage(file="imagenes/basico_suelo.png")
-#tile_actual=tile_basico_pared
-tile_actual=tile_cesped
+nodo_tile_actual=tile_basico_pared
+peso_nodo_actual=1
+
+#CODIGO PARA DIJKSTRA
+grid = [[peso_nodo_actual for i in range(GRID_ANCHO)]for j in range(GRID_ALTO)]
 
 #Funciones
 def pintar_tile_en_canvas(x,y,tile):
-    canvas_grafo.create_image(x,y,image=tile,anchor=tkinter.NW)
+    canvas_grafo.create_image(x,y,image=tile,anchor=tkinter.NW,tag="tile")
     pass
 def repintar_tile(event):
-    tile_actual_x, tile_actual_y = canvas_grafo.coords(canvas_grafo.find_closest(event.x,event.y))
-    pintar_tile_en_canvas(tile_actual_x,tile_actual_y,tile_actual)
+    global peso_nodo_actual
+    peso_nodo_actual=5
+    nodo_actual_x, nodo_actual_y = canvas_grafo.coords(canvas_grafo.find_closest(event.x,event.y))
+    pintar_tile_en_canvas(nodo_actual_x,nodo_actual_y,nodo_tile_actual)
+    grid[int(nodo_actual_y/16)][int(nodo_actual_x/16)]=peso_nodo_actual
+    print(grid)
     pass
+# CODIGO PARA VENTANA
+GRIS_OSCURO = "#1F2022"  # color del fondo en hexadecimal
+ventana.title("Proyecto Dijkstra")
 # Frame de fondo (PRINCIPAL)
 fondo = tkinter.Frame()
 fondo.config(width=800, height=600, bg=GRIS_OSCURO)
@@ -81,7 +89,7 @@ lista_de_nodos.pack(side=tkinter.LEFT, padx=5, pady=(5, 0))
 #Crear grid en ventana
 for j in range(GRID_ALTO):
     for i in range(GRID_ANCHO):
-        sprite=canvas_grafo.create_image(i*TAMAÑO_DE_SPRITE,j*TAMAÑO_DE_SPRITE,image=tile_basico_suelo,anchor=tkinter.NW)
-        canvas_grafo.tag_bind(sprite, "<1>", repintar_tile)
-        canvas_grafo.tag_bind(sprite,"<B1-Motion>",repintar_tile)
+        sprite=canvas_grafo.create_image(i*TAMAÑO_DE_SPRITE,j*TAMAÑO_DE_SPRITE,image=tile_basico_suelo,anchor=tkinter.NW,tags="tile")
+canvas_grafo.tag_bind("tile", "<1>", repintar_tile)
+canvas_grafo.tag_bind("tile","<B1-Motion>",repintar_tile)
 ventana.mainloop()
