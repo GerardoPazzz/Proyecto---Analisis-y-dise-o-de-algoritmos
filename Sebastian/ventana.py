@@ -11,7 +11,9 @@ ventana = tkinter.Tk()
 #txtfield=tkinter.Entry(ventana,font="Arial 20")
 #txtfield.pack()
 
-buscando=False
+flag_buscando=False
+flag_pausado=False
+flag_reiniciado=False
 
 #Configuraciones del editor de mapa (Grafo)
 GRID_ALTO=26
@@ -42,9 +44,11 @@ def repintar_tile(event):
     #print(grid)
     pass
 def iniciar_busqueda():
-    boton_iniciar_busqueda.config(bg="red",text="PAUSAR")
-    global buscando
-    buscando=True
+    boton_iniciar_busqueda.config(bg="red",text="PAUSAR",command=pausar)
+    global flag_buscando
+    global flag_reiniciado
+    global flag_pausado
+    flag_buscando=True
     tiempo=time.time()*1000
     grafo = convertir_grid(grid)
     costo_minimo = {inicio: 0}
@@ -56,31 +60,53 @@ def iniciar_busqueda():
     global lista_graficos_nodos # Para manejar graficos al dibujar el proceso en el canvas, necesario para mejor rendimiento
     grafico_nodo_inicio = canvas_grafo.create_oval(inicio[0]*16,inicio[1]*16,(inicio[0]+1)*16-1,(inicio[1]+1)*16-1,fill="red")
     grafico_nodo_final = canvas_grafo.create_oval(final[0]*16,final[1]*16,(final[0]+1)*16-1,(final[1]+1)*16-1,fill="yellow")
-    while nodo_actual != final:
-        costo_minimo, recorrido_de_nodos, nodos_visitados, nodo_actual, camino = \
-            Dijkstra_v3(costo_minimo, recorrido_de_nodos, nodos_visitados, nodo_actual, grafo)
-        label_nodo_evaluado.config(text=f"({nodo_actual[0]},{nodo_actual[1]})")
-        label_nodos_visitados.config(text=f"{len(nodos_visitados)}")
-        label_nodos_camino.config(text=f"{len(camino)}")
-        while len(lista_graficos_nodos) < len(camino):
-            lista_graficos_nodos.append(canvas_grafo.create_oval(-15,-15,0,0, fill="blue",tags="nodo_camino"))
-        canvas_grafo.moveto("nodo_camino",-15,-15)
-        indice_lista_graficos=0
-        for j in range(GRID_ALTO):
-            for i in range(GRID_ANCHO):
-                if (i,j) != inicio and (i,j) != final and (i,j) in camino:
-                    canvas_grafo.moveto(lista_graficos_nodos[indice_lista_graficos],i*16-1,j*16-1)
-                    indice_lista_graficos+=1
-        #print(camino)
-        #time.sleep(0.1)
+    while nodo_actual != final and not flag_reiniciado:
+        if not flag_pausado:
+            costo_minimo, recorrido_de_nodos, nodos_visitados, nodo_actual, camino = \
+                Dijkstra_v3(costo_minimo, recorrido_de_nodos, nodos_visitados, nodo_actual, grafo)
+            label_nodo_evaluado.config(text=f"({nodo_actual[0]},{nodo_actual[1]})")
+            label_nodos_visitados.config(text=f"{len(nodos_visitados)}")
+            label_nodos_camino.config(text=f"{len(camino)}")
+            while len(lista_graficos_nodos) < len(camino):
+                lista_graficos_nodos.append(canvas_grafo.create_oval(-15,-15,0,0, fill="blue",tags="nodo_camino"))
+            canvas_grafo.itemconfig("nodo_camino",state="hidden")
+            indice_lista_graficos=0
+            for j in range(GRID_ALTO):
+                for i in range(GRID_ANCHO):
+                    if (i,j) != inicio and (i,j) != final and (i,j) in camino:
+                        canvas_grafo.itemconfig(lista_graficos_nodos[indice_lista_graficos], state="normal")
+                        canvas_grafo.moveto(lista_graficos_nodos[indice_lista_graficos],i*16-1,j*16-1)
+                        indice_lista_graficos+=1
+            #print(camino)
+            #time.sleep(0.1)
         ventana.update()
+    if flag_reiniciado:
+        canvas_grafo.itemconfig("nodo_camino",state="hidden")
+        #canvas_grafo.delete("nodo_camino")
+        #lista_graficos_nodos.clear()
+    flag_reiniciado=False
+    flag_buscando=False
+    flag_pausado=False
     label_ultima_evaluacion.config(text=f"{time.time()*1000-tiempo:.0f}")
-    boton_iniciar_busqueda.config(bg="green", text="INICIAR\nBÚSQUEDA")
+    boton_iniciar_busqueda.config(bg="green", text="INICIAR\nBÚSQUEDA",command=iniciar_busqueda)
     pass
 def reiniciar():
-    lista_graficos_nodos.clear()
-    canvas_grafo.delete("nodo_camino")
-    ventana.update()
+    if not flag_buscando:
+        canvas_grafo.itemconfig("nodo_camino",state="hidden")
+        #canvas_grafo.delete("nodo_camino")
+        #lista_graficos_nodos.clear()
+    else:
+        global flag_reiniciado
+        flag_reiniciado=True
+
+def pausar():
+    boton_iniciar_busqueda.config(bg="blue",text="CONTINUAR\nBÚSQUEDA",command=quitar_pausa,fg="white")
+    global flag_pausado
+    flag_pausado = True
+def quitar_pausa():
+    boton_iniciar_busqueda.config(bg="red", text="PAUSAR", command=pausar)
+    global flag_pausado
+    flag_pausado = False
 # CODIGO PARA VENTANA
 GRIS_OSCURO = "#1F2022"  # color del fondo en hexadecimal
 fuente_titulo=("Arial",9)  #Fuente para titulo de frame de grafo
@@ -141,7 +167,7 @@ label_nodos_visitados.grid(row=3,column=1,sticky="w")
 tkinter.Label(configuracion_de_busqueda,text="Número de nodos de camino mínimo:",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=4,column=0,sticky="e")
 label_nodos_camino=tkinter.Label(configuracion_de_busqueda,text="0",fg="white",bg=GRIS_OSCURO,font=fuente_opciones)
 label_nodos_camino.grid(row=4,column=1,sticky="w")
-tkinter.Label(configuracion_de_busqueda,text="Ultimo tiempo de evaluación:",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=5,column=0,sticky="e")
+tkinter.Label(configuracion_de_busqueda,text="Último tiempo de evaluación(ms):",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=5,column=0,sticky="e")
 label_ultima_evaluacion=tkinter.Label(configuracion_de_busqueda,text="0",fg="white",bg=GRIS_OSCURO,font=fuente_opciones)
 label_ultima_evaluacion.grid(row=5,column=1,sticky="w")
 tkinter.Label(configuracion_de_busqueda,text="Mostrar camino mínimo",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=6,column=0,sticky="e")
