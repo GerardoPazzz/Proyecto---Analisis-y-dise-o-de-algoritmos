@@ -27,7 +27,7 @@ peso_nodo_actual=1
 
 #CODIGO PARA DIJKSTRA
 grid = [[peso_nodo_actual for i in range(GRID_ANCHO)]for j in range(GRID_ALTO)]
-inicio, final = ((0, 0), (20, 20))  # Configuracion del punto de inicio y final
+inicio, final = ((0, 0), (GRID_ANCHO-1, GRID_ALTO-1))  # Configuracion del punto de inicio y final
 lista_graficos_nodos=[]
 #Funciones
 def pintar_tile_en_canvas(x,y,tile):
@@ -58,8 +58,6 @@ def iniciar_busqueda():
     camino = []
     # Variables para graficos
     global lista_graficos_nodos # Para manejar graficos al dibujar el proceso en el canvas, necesario para mejor rendimiento
-    grafico_nodo_inicio = canvas_grafo.create_oval(inicio[0]*16,inicio[1]*16,(inicio[0]+1)*16-1,(inicio[1]+1)*16-1,fill="red")
-    grafico_nodo_final = canvas_grafo.create_oval(final[0]*16,final[1]*16,(final[0]+1)*16-1,(final[1]+1)*16-1,fill="yellow")
     while nodo_actual != final and not flag_reiniciado:
         if not flag_pausado:
             costo_minimo, recorrido_de_nodos, nodos_visitados, nodo_actual, camino = \
@@ -107,6 +105,58 @@ def quitar_pausa():
     boton_iniciar_busqueda.config(bg="red", text="PAUSAR", command=pausar)
     global flag_pausado
     flag_pausado = False
+
+# Funciones para obtener datos
+def obtener_punto_inicial(a,e,i):
+    global inicio
+    punto=text_punto_inicial.get().strip()
+    try:
+        entry_punto_inicial.config(highlightbackground="white", highlightcolor="white")
+        x,y=punto.split(",")
+        if x.startswith("("):
+            x=x[1:len(x)]
+        x=x.strip()
+        if y.endswith(")"):
+            y=y[0:len(y)-1]
+        y=y.strip()
+        if x.isdigit() and y.isdigit():
+            if 0<=int(x)<GRID_ANCHO and 0<=int(y)<GRID_ALTO:
+                punto_lst=list(inicio)
+                punto_lst[0],punto_lst[1]=int(x),int(y)
+                inicio=tuple(punto_lst)
+                canvas_grafo.moveto(grafico_nodo_inicio,inicio[0]*TAMAÑO_DE_SPRITE,inicio[1]*TAMAÑO_DE_SPRITE)
+            else:
+                raise Exception("Valores fuera del limite")
+        else:
+            raise Exception("Valores ingresados no son numeros")
+    except:
+        entry_punto_inicial.config(highlightbackground="red",highlightcolor="red")
+
+def obtener_punto_final(a,e,i):
+    global final
+    punto=text_punto_final.get().strip()
+    try:
+        entry_punto_final.config(highlightbackground="white", highlightcolor="white")
+        x,y=punto.split(",")
+        if x.startswith("("):
+            x=x[1:len(x)]
+        x=x.strip()
+        if y.endswith(")"):
+            y=y[0:len(y)-1]
+        y=y.strip()
+        if x.isdigit() and y.isdigit():
+            if 0<=int(x)<=GRID_ANCHO and 0<=int(y)<=GRID_ALTO:
+                punto_lst=list(final)
+                punto_lst[0],punto_lst[1]=int(x),int(y)
+                final=tuple(punto_lst)
+                canvas_grafo.moveto(grafico_nodo_final, final[0]*TAMAÑO_DE_SPRITE, final[1]*TAMAÑO_DE_SPRITE)
+            else:
+                raise Exception("Valores fuera del limite")
+        else:
+            raise Exception("Valores ingresados no son numeros")
+    except:
+        entry_punto_final.config(highlightbackground="red",highlightcolor="red")
+
 # CODIGO PARA VENTANA
 GRIS_OSCURO = "#1F2022"  # color del fondo en hexadecimal
 fuente_titulo=("Arial",9)  #Fuente para titulo de frame de grafo
@@ -137,12 +187,21 @@ canvas_grafo.pack(side=tkinter.TOP, padx=(5, 5), pady=(5, 0))
 configuracion_de_grafo = tkinter.Frame(framegrafo, bg=GRIS_OSCURO,highlightbackground="gray", highlightthickness=1)
 configuracion_de_grafo.config(width=150, height=120)
 configuracion_de_grafo.pack(side=tkinter.LEFT, padx=(5, 5), pady=5,fill=tkinter.Y)
-
+#Variables de control
+text_punto_inicial=tkinter.StringVar()
+text_punto_inicial.set(f"({inicio[0]},{inicio[1]})")
+text_punto_inicial.trace("w",obtener_punto_inicial)
+text_punto_final=tkinter.StringVar()
+text_punto_final.set(f"({final[0]},{final[1]})")
+text_punto_final.trace("w",obtener_punto_final)
+#Labels y Entrys
 tkinter.Label(configuracion_de_grafo,text="CONFIGURACIÓN DE GRAFO",fg="white",bg=GRIS_OSCURO,font=fuente_titulo).grid(row=0,columnspan=2)
 tkinter.Label(configuracion_de_grafo,text="Punto inicial:",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=1,column=0,sticky="e")
-tkinter.Entry(configuracion_de_grafo,width=8).grid(row=1,column=1,sticky="w")
+entry_punto_inicial=tkinter.Entry(configuracion_de_grafo,width=8,textvariable=text_punto_inicial,bd=0,highlightbackground="white",highlightcolor="white",highlightthickness=1)
+entry_punto_inicial.grid(row=1,column=1,sticky="w")
 tkinter.Label(configuracion_de_grafo,text="Punto final:",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=2,column=0,sticky="e")
-tkinter.Entry(configuracion_de_grafo,width=8).grid(row=2,column=1,sticky="w")
+entry_punto_final=tkinter.Entry(configuracion_de_grafo,width=8,textvariable=text_punto_final,bd=0,highlightbackground="white",highlightcolor="white",highlightthickness=1)
+entry_punto_final.grid(row=2,column=1,sticky="w")
 tkinter.Label(configuracion_de_grafo,text="Ancho x Alto:",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=3,column=0,sticky="e")
 tkinter.Entry(configuracion_de_grafo,width=8).grid(row=3,column=1,sticky="w")
 tkinter.Label(configuracion_de_grafo,text="Tamaño de imagen:",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=4,column=0,sticky="e")
@@ -198,5 +257,8 @@ for j in range(GRID_ALTO):
         sprite=canvas_grafo.create_image(i*TAMAÑO_DE_SPRITE,j*TAMAÑO_DE_SPRITE,image=tile_basico_suelo,anchor=tkinter.NW,tags="tile")
 canvas_grafo.tag_bind("tile", "<1>", repintar_tile)
 canvas_grafo.tag_bind("tile","<B1-Motion>",repintar_tile)
+# Creacion de los graficos de los puntos de inicio y final
+grafico_nodo_inicio = canvas_grafo.create_oval(inicio[0]*16,inicio[1]*16,(inicio[0]+1)*16-1,(inicio[1]+1)*16-1,fill="red")
+grafico_nodo_final = canvas_grafo.create_oval(final[0]*16,final[1]*16,(final[0]+1)*16-1,(final[1]+1)*16-1,fill="yellow")
 
 ventana.mainloop()
