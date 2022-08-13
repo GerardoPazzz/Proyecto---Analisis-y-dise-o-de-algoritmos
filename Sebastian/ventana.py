@@ -33,8 +33,10 @@ def pintar_tile_en_canvas(x,y,tile):
 def repintar_tile(event):
     global peso_nodo_actual
     peso_nodo_actual=6
-    nodo_actual_x, nodo_actual_y = canvas_grafo.coords(canvas_grafo.find_closest(event.x,event.y))
-    pintar_tile_en_canvas(nodo_actual_x,nodo_actual_y,nodo_tile_actual)
+    item_nodo=canvas_grafo.find_closest(event.x,event.y)
+    nodo_actual_x, nodo_actual_y = canvas_grafo.coords(item_nodo)
+    #pintar_tile_en_canvas(nodo_actual_x,nodo_actual_y,nodo_tile_actual) # -> Opcion demandante
+    canvas_grafo.itemconfig(item_nodo, image=tile_basico_pared)  # -> Opcion optimizada
     grid[int(nodo_actual_y/16)][int(nodo_actual_x/16)]=peso_nodo_actual
     #print(grid)
     pass
