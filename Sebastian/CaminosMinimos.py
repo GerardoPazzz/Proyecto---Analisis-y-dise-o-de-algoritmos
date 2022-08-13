@@ -6,7 +6,7 @@ max_Int=2**63-1
 
 # Funciones de graficación
 def pintar_grafo_en_consola(grid):
-    """Funcion para pintar en consola, con objetivo de pruebas.
+    """Funcion para pintar en consola el proceso de busqueda, con objetivo de pruebas.
     I = punto de inicio, F = punto final, V = nodos visitados, C = camino minimo"""
     RESETEAR = "\033[1;0m"
     BLOQUE_AMARILLO = "\033[1;103m"
