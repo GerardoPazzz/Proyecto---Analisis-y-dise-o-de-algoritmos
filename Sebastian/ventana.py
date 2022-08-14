@@ -16,8 +16,8 @@ flag_pausado=False
 flag_reiniciado=False
 
 #Configuraciones del editor de mapa (Grafo)
-GRID_ALTO=12
-GRID_ANCHO=20
+GRID_ALTO=24
+GRID_ANCHO=24
 TAMAÑO_DE_SPRITE=16
 BORDE_DE_GRID=1
 tile_cesped = tkinter.PhotoImage(file="imagenes/cesped.png")
@@ -68,7 +68,7 @@ def iniciar_busqueda():
             label_nodos_visitados.config(text=f"{len(nodos_visitados)}")
             label_nodos_camino.config(text=f"{len(camino)}")
             while len(lista_graficos_nodos) < len(camino):
-                lista_graficos_nodos.append(canvas_grafo.create_oval(-15,-15,0,0, fill="blue",tags="nodo_camino"))
+                lista_graficos_nodos.append(canvas_grafo.create_oval(0,0,TAMAÑO_DE_SPRITE,TAMAÑO_DE_SPRITE, fill="blue",tags="nodo_camino"))
             canvas_grafo.itemconfig("nodo_camino",state="hidden")
             indice_lista_graficos=0
             for j in range(GRID_ALTO):
@@ -76,7 +76,7 @@ def iniciar_busqueda():
                     if (i,j) != inicio and (i,j) != final and (i,j) in camino:
                         canvas_grafo.itemconfig(lista_graficos_nodos[indice_lista_graficos], state="normal")
                         canvas_grafo.moveto(lista_graficos_nodos[indice_lista_graficos],
-                                            i*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)-1,j*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)-1)
+                                            i*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,j*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID)
                         indice_lista_graficos+=1
             #print(camino)
             #time.sleep(0.1)
@@ -127,8 +127,8 @@ def obtener_punto_inicial(*args):
                 punto_lst=list(inicio)
                 punto_lst[0],punto_lst[1]=int(x),int(y)
                 inicio=tuple(punto_lst)
-                canvas_grafo.moveto(grafico_nodo_inicio,inicio[0]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID),
-                                    inicio[1]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID))
+                canvas_grafo.moveto(grafico_nodo_inicio,inicio[0]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,
+                                    inicio[1]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID)
             else:
                 raise Exception("Valores fuera del limite")
         else:
@@ -153,8 +153,8 @@ def obtener_punto_final(*args):
                 punto_lst=list(final)
                 punto_lst[0],punto_lst[1]=int(x),int(y)
                 final=tuple(punto_lst)
-                canvas_grafo.moveto(grafico_nodo_final, final[0]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)-1,
-                                    final[1]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)-1)
+                canvas_grafo.moveto(grafico_nodo_final, final[0]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,
+                                    final[1]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID)
             else:
                 raise Exception("Valores fuera del limite")
         else:
@@ -163,7 +163,7 @@ def obtener_punto_final(*args):
         entry_punto_final.config(highlightbackground="red",highlightcolor="red")
 
 def cambiar_tamaño_canvas_grafo(alto,ancho):
-    canvas_grafo.config(width=ancho*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID),height=alto*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID),bg="gray")
+    canvas_grafo.config(width=ancho*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,height=alto*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,bg="gray")
     contenedor_grafo.update()
     #print(contenedor_grafo.winfo_width()/2,contenedor_grafo.winfo_height()/2)
     canvas_grafo.place(x=contenedor_grafo.winfo_width()/2, y=contenedor_grafo.winfo_height()/2,anchor="center")
@@ -208,7 +208,7 @@ fondo.pack()
 framenodos = tkinter.Frame(fondo, bg=GRIS_OSCURO, highlightbackground="gray", highlightthickness=1)
 framenodos.config(width=300, height=570)
 # framenodos.grid(row=0,column=0,padx=10,pady =10)
-framenodos.pack(side=tkinter.LEFT, padx=10, pady=10)
+#framenodos.pack(side=tkinter.LEFT, padx=10, pady=10)
 # FRAME DE GRAFO
 framegrafo = tkinter.Frame(fondo, bg=GRIS_OSCURO,highlightbackground="gray", highlightthickness=1)
 framegrafo.config(width=460, height=560)
@@ -301,16 +301,17 @@ cambiar_tamaño_canvas_grafo(GRID_ALTO,GRID_ANCHO)
 #Crear grid en ventana
 for j in range(GRID_ALTO):
     for i in range(GRID_ANCHO):
-        sprite=canvas_grafo.create_image(i*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID),j*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID),
+        sprite=canvas_grafo.create_image(i*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,
+                                         j*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,
         image=tile_basico_suelo,anchor=tkinter.NW,tags="tile")
 canvas_grafo.tag_bind("tile", "<1>", repintar_tile)
 canvas_grafo.tag_bind("tile","<B1-Motion>",repintar_tile)
 # Creacion de los graficos de los puntos de inicio y final
-grafico_nodo_inicio = canvas_grafo.create_oval(inicio[0]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID),
-inicio[1]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID), (inicio[0]+1)*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)-1,
-(inicio[1]+1)*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)-1,fill="red")
-grafico_nodo_final = canvas_grafo.create_oval(final[0]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID),
-final[1]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID), (final[0]+1)*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)-1,
-(final[1]+1)*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)-1,fill="yellow")
+grafico_nodo_inicio = canvas_grafo.create_oval(1,1,TAMAÑO_DE_SPRITE-1,TAMAÑO_DE_SPRITE-1,fill="red",width=0)
+canvas_grafo.moveto(grafico_nodo_inicio,inicio[0]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,
+                    inicio[1]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID)
+grafico_nodo_final = canvas_grafo.create_oval(1,1,TAMAÑO_DE_SPRITE,TAMAÑO_DE_SPRITE,fill="yellow",width=0)
+canvas_grafo.moveto(grafico_nodo_final,final[0]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,
+                    final[1]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID)
 
 ventana.mainloop()
