@@ -1,5 +1,6 @@
 import time
 import tkinter    #Libreria para ventanas
+from tkinter import  messagebox
 from CaminosMinimos import  *
 
 ventana = tkinter.Tk()
@@ -78,6 +79,9 @@ def iniciar_busqueda():
             costo_minimo, recorrido_de_nodos, nodos_visitados, nodo_actual, camino = \
                 Dijkstra_v3(costo_minimo, recorrido_de_nodos, nodos_visitados, nodo_actual, grafo)
             if nodo_actual is None:
+                messagebox.showinfo(title="Camino no existente",
+                                    message="No existe camino para llegar al punto final")
+                flag_reiniciado=True
                 break
             label_nodo_evaluado.config(text=f"({nodo_actual[0]},{nodo_actual[1]})")
             label_nodos_visitados.config(text=f"{len(nodos_visitados)}")
@@ -228,7 +232,7 @@ framenodos.config(width=300, height=570)
 framegrafo = tkinter.Frame(fondo, bg=GRIS_OSCURO,highlightbackground="gray", highlightthickness=1)
 framegrafo.config(width=460, height=560)
 # framegrafo.grid(row=0,column=1,padx=10,pady=10)
-framegrafo.pack(side=tkinter.BOTTOM, padx=(0, 10), pady=10)
+framegrafo.pack(side=tkinter.BOTTOM, padx=(10, 10), pady=10)
 
 # Elementos de frame de grafo
 # Frame de grafo (Panel que pondra limites al grafo)
