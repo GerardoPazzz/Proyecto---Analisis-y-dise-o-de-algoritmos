@@ -1,6 +1,6 @@
 import time
 import tkinter    #Libreria para ventanas
-from tkinter import  messagebox
+from tkinter import  messagebox, ttk
 from CaminosMinimos import  *
 
 ventana = tkinter.Tk()
@@ -58,6 +58,12 @@ def despintar_tile(event):  # Opcion temporal para mejorar el control sobre el m
         grid[int(nodo_actual_y/(TAMAÑO_DE_SPRITE+BORDE_DE_GRID))][int(nodo_actual_x/(TAMAÑO_DE_SPRITE+BORDE_DE_GRID))]=peso_nodo_actual
     #print(grid)
     pass
+
+def borrar_grafo():
+    canvas_grafo.itemconfig("tile", image=tile_basico_suelo)
+    for j in range(GRID_ALTO):
+        for i in range(GRID_ANCHO):
+            grid[j][i]=1
 
 def iniciar_busqueda():
     boton_iniciar_busqueda.config(bg="red",text="PAUSAR",command=pausar)
@@ -183,6 +189,18 @@ def obtener_punto_final(*args):
 
 def cambiar_tamaño_canvas_grafo(alto,ancho):
     canvas_grafo.config(width=ancho*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,height=alto*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,bg="gray")
+    nuevo_grid=[]
+    global grid
+    global GRID_ALTO
+    global GRID_ANCHO
+    for j in range(alto):
+        fila=[]
+        for i in range(ancho):
+            fila.append(grid[j][i])
+        nuevo_grid.append(fila)
+    grid=nuevo_grid
+    GRID_ALTO=alto
+    GRID_ANCHO=ancho
     contenedor_grafo.update()
     #print(contenedor_grafo.winfo_width()/2,contenedor_grafo.winfo_height()/2)
     canvas_grafo.place(x=contenedor_grafo.winfo_width()/2, y=contenedor_grafo.winfo_height()/2,anchor="center")
@@ -190,8 +208,9 @@ def cambiar_tamaño_canvas_grafo(alto,ancho):
 def obtener_tamaño_grafo(*args):
     global GRID_ANCHO
     global GRID_ALTO
+    global final
     contenedor_grafo.update()
-    tamaño = text_tamaño_grafo.get().strip()
+    tamaño = entry_tamaño_grafo.get()
     try:
         entry_tamaño_grafo.config(highlightbackground="white", highlightcolor="white")
         ancho, alto = tamaño.split("x")
@@ -201,14 +220,23 @@ def obtener_tamaño_grafo(*args):
             if 0 < int(ancho) and 0 < int(alto):
                 if int(ancho)*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)<contenedor_grafo.winfo_width() and \
                     int(alto)*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)<contenedor_grafo.winfo_height():
-                    cambiar_tamaño_canvas_grafo(alto,ancho)
+                    cambiar_tamaño_canvas_grafo(int(alto),int(ancho))
+                    """canvas_grafo.moveto(grafico_nodo_final,
+                                        (ancho-1) * (TAMAÑO_DE_SPRITE + BORDE_DE_GRID) + BORDE_DE_GRID,
+                                        (alto-1) * (TAMAÑO_DE_SPRITE + BORDE_DE_GRID) + BORDE_DE_GRID)
+                    punto_lst = list(final)
+                    punto_lst[0], punto_lst[1] = int(ancho-1), int(alto-1)
+                    final = tuple(punto_lst)
+                    entry_punto_final.delete(0,tkinter.END)
+                    entry_punto_final.insert(tkinter.END,f"({final[0]}x{final[1]})")"""
                 else:
                     raise Exception("Valores fuera del limite del contenedor de grafo")
             else:
                 raise Exception("Valores no aceptados para grafo")
         else:
             raise Exception("Valores ingresados no son numeros")
-    except:
+    except(Exception):
+        print(Exception)
         entry_tamaño_grafo.config(highlightbackground="red", highlightcolor="red")
 
 
@@ -255,9 +283,6 @@ text_punto_inicial.trace("w",obtener_punto_inicial)
 text_punto_final=tkinter.StringVar()
 text_punto_final.set(f"({final[0]},{final[1]})")
 text_punto_final.trace("w",obtener_punto_final)
-text_tamaño_grafo=tkinter.StringVar()
-text_tamaño_grafo.set(f"{GRID_ANCHO}x{GRID_ALTO}")
-text_tamaño_grafo.trace("w",obtener_tamaño_grafo)
 #Labels y Entrys
 tkinter.Label(configuracion_de_grafo,text="CONFIGURACIÓN DE GRAFO",fg="white",bg=GRIS_OSCURO,font=fuente_titulo).grid(row=0,columnspan=2)
 tkinter.Label(configuracion_de_grafo,text="Punto inicial:",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=1,column=0,sticky="e")
@@ -266,14 +291,19 @@ entry_punto_inicial.grid(row=1,column=1,sticky="w")
 tkinter.Label(configuracion_de_grafo,text="Punto final:",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=2,column=0,sticky="e")
 entry_punto_final = tkinter.Entry(configuracion_de_grafo,width=8,textvariable=text_punto_final,bd=0,highlightbackground="white",highlightcolor="white",highlightthickness=1)
 entry_punto_final.grid(row=2,column=1,sticky="w")
-tkinter.Label(configuracion_de_grafo,text="Ancho x Alto:",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=3,column=0,sticky="e")
-entry_tamaño_grafo = tkinter.Entry(configuracion_de_grafo,width=8,textvariable=text_tamaño_grafo,bd=0,highlightbackground="white",highlightcolor="white",highlightthickness=1)
-entry_tamaño_grafo.grid(row=3,column=1,sticky="w")
-tkinter.Label(configuracion_de_grafo,text="Tamaño de imagen:",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=4,column=0,sticky="e")
+ttk.Separator(configuracion_de_grafo,orient='horizontal').grid(row=3,columnspan=2,ipadx=75,ipady=0,pady=3)
+tkinter.Label(configuracion_de_grafo,text="Ancho x Alto:",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=4,column=0,sticky="e")
+entry_tamaño_grafo = tkinter.Entry(configuracion_de_grafo,width=8,bd=0,highlightbackground="white",highlightcolor="white",highlightthickness=1)
+entry_tamaño_grafo.insert(tkinter.END,f"{GRID_ANCHO}x{GRID_ALTO}")
+entry_tamaño_grafo.grid(row=4,column=1,sticky="w")
+tkinter.Label(configuracion_de_grafo,text="Tamaño de imagen:",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=5,column=0,sticky="e")
 label_tamaño_imagen = tkinter.Label(configuracion_de_grafo,text="16 px",fg="white",bg=GRIS_OSCURO,font=fuente_opciones)
-label_tamaño_imagen.grid(row=4,column=1,sticky="w")
-tkinter.Label(configuracion_de_grafo,text="Mostrar rejilla",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=5,column=0,sticky="e")
-
+label_tamaño_imagen.grid(row=5,column=1,sticky="w")
+tkinter.Label(configuracion_de_grafo,text="Mostrar rejilla",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=6,column=0,sticky="e")
+boton_aceptar_cambios = tkinter.Button(configuracion_de_grafo, text="Aceptar", bg="gray",command=obtener_tamaño_grafo)
+boton_aceptar_cambios.grid(row=7,column=0,sticky="we")
+boton_borrar_grafo = tkinter.Button(configuracion_de_grafo, text="Borrar grafo", bg="gray",command=borrar_grafo)
+boton_borrar_grafo.grid(row=7,column=1)
 # Frame de configuracion de busqueda
 configuracion_de_busqueda = tkinter.Frame(framegrafo, bg=GRIS_OSCURO,highlightbackground="gray", highlightthickness=1)
 configuracion_de_busqueda.config(width=150, height=120)
@@ -315,9 +345,10 @@ lista_de_nodos.pack(side=tkinter.LEFT, padx=5, pady=(5, 0))
 
 
 # Prueba de creacion de grid con imagenes
-cambiar_tamaño_canvas_grafo(GRID_ALTO,GRID_ANCHO)
+
 #sprite=Image.open("imagenes/cesped.png")
 #Crear grid en ventana
+cambiar_tamaño_canvas_grafo(GRID_ALTO,GRID_ANCHO)
 for j in range(GRID_ALTO):
     for i in range(GRID_ANCHO):
         sprite=canvas_grafo.create_image(i*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,
