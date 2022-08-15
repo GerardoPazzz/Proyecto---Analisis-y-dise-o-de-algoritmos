@@ -77,6 +77,8 @@ def iniciar_busqueda():
         if not flag_pausado:
             costo_minimo, recorrido_de_nodos, nodos_visitados, nodo_actual, camino = \
                 Dijkstra_v3(costo_minimo, recorrido_de_nodos, nodos_visitados, nodo_actual, grafo)
+            if nodo_actual is None:
+                break
             label_nodo_evaluado.config(text=f"({nodo_actual[0]},{nodo_actual[1]})")
             label_nodos_visitados.config(text=f"{len(nodos_visitados)}")
             label_nodos_camino.config(text=f"{len(camino)}")
