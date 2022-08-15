@@ -18,7 +18,7 @@ def pintar_grafo_en_consola(grid):
         for col in range(len(grid[fil])):
             peso, signo = grid[fil][col]
             COLOR = BLOQUE_AMARILLO if peso == 2 else BLOQUE_VERDE if peso == 3 else BLOQUE_AZUL if peso == 4 else \
-                BLOQUE_VERDEOSCURO if peso == 5 else BLOQUE_PARED if peso == 6 else ""
+                BLOQUE_VERDEOSCURO if peso == 5 else BLOQUE_PARED if peso == "Inf" else ""
             print(COLOR,signo,RESETEAR,sep="",end=" ")
         print()
     pass
@@ -27,23 +27,27 @@ def limpiar_consola():
     print("\033c",sep="",end="")
 
 # Funciones de apoyo
+
+
 def convertir_grid(grid):
     """Funcion para convertir un grid de pesos en un grafo (diccionario de nodos)."""
     grafo = {}
     direcciones = [(1, 0), (-1, 0), (0, 1), (0, -1)]
     for j, fila in enumerate(grid):
-        for i, columna in enumerate(fila):
-            if grid[j][i] < 6:
+        for i, peso in enumerate(fila):
+            if peso != "Inf":
                 nodos_vecinos = []
                 for x, y in direcciones:
                     newx, newy = x+i, y+j
-                    if 0 <= newx < len(fila) and 0 <= newy < len(grid) and grid[newy][newx]!= 6:
+                    if 0 <= newx < len(fila) and 0 <= newy < len(grid) and grid[newy][newx] != "Inf":
                         nodos_vecinos.append(((newx, newy), grid[newy][newx]))
                 grafo[(i, j)] = nodos_vecinos
     return grafo
 
 # Algoritmos de caminos minimos
-def Dijkstra(inicio,final,mAd):
+
+
+def Dijkstra(inicio, final, mAd):
     """Primera version de algoritmo que utiliza una matriz de adyacencia
     y un valor maximo para obtener el camino minimo."""
     # Variables
@@ -77,7 +81,8 @@ def Dijkstra(inicio,final,mAd):
     camino = camino[::-1]
     return camino
 
-def Dijkstra_v2(inicio,final,grafo):
+
+def Dijkstra_v2(inicio, final, grafo):
     """Segunda version de algoritmo que utiliza un diccionario con los nodos del grafo
     para hallar la lista de nodos(puntos) que conforman el camino minimo. No requiere
     un tamaño maximo o 'infinito'."""
@@ -112,6 +117,7 @@ def Dijkstra_v2(inicio,final,grafo):
         camino.append(nodo_actual)
         nodo_actual = recorrido_de_nodos[nodo_actual]
     return camino[::-1]
+
 
 def Dijkstra_v3(costo_minimo, recorrido_de_nodos, nodos_visitados, nodo_actual, grafo):
     """Tercera version de algoritmo basado en la version 2. Preparado para ejecutarse

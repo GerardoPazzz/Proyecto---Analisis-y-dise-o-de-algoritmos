@@ -1,5 +1,5 @@
 import time
-import tkinter
+import tkinter    #Libreria para ventanas
 from CaminosMinimos import  *
 
 ventana = tkinter.Tk()
@@ -16,8 +16,8 @@ flag_pausado=False
 flag_reiniciado=False
 
 #Configuraciones del editor de mapa (Grafo)
-GRID_ALTO=24
-GRID_ANCHO=24
+GRID_ALTO=23
+GRID_ANCHO=23
 TAMAÑO_DE_SPRITE=16
 BORDE_DE_GRID=1
 tile_cesped = tkinter.PhotoImage(file="imagenes/cesped.png")
@@ -37,7 +37,7 @@ def pintar_tile_en_canvas(x,y,tile):
 def repintar_tile(event):
     if not flag_buscando:
         global peso_nodo_actual
-        peso_nodo_actual=6
+        peso_nodo_actual="Inf"
         item_nodo=canvas_grafo.find_closest(event.x,event.y)
         nodo_actual_x, nodo_actual_y = canvas_grafo.coords(item_nodo)
         #pintar_tile_en_canvas(nodo_actual_x,nodo_actual_y,nodo_tile_actual) # -> Opcion demandante
@@ -45,6 +45,19 @@ def repintar_tile(event):
         grid[int(nodo_actual_y/(TAMAÑO_DE_SPRITE+BORDE_DE_GRID))][int(nodo_actual_x/(TAMAÑO_DE_SPRITE+BORDE_DE_GRID))]=peso_nodo_actual
     #print(grid)
     pass
+
+def despintar_tile(event):  # Opcion temporal para mejorar el control sobre el modo pintar
+    if not flag_buscando:
+        global peso_nodo_actual
+        peso_nodo_actual=1
+        item_nodo=canvas_grafo.find_closest(event.x,event.y)
+        nodo_actual_x, nodo_actual_y = canvas_grafo.coords(item_nodo)
+        #pintar_tile_en_canvas(nodo_actual_x,nodo_actual_y,nodo_tile_actual) # -> Opcion demandante
+        canvas_grafo.itemconfig(item_nodo, image=tile_basico_suelo)  # -> Opcion optimizada
+        grid[int(nodo_actual_y/(TAMAÑO_DE_SPRITE+BORDE_DE_GRID))][int(nodo_actual_x/(TAMAÑO_DE_SPRITE+BORDE_DE_GRID))]=peso_nodo_actual
+    #print(grid)
+    pass
+
 def iniciar_busqueda():
     boton_iniciar_busqueda.config(bg="red",text="PAUSAR",command=pausar)
     global flag_buscando
@@ -306,6 +319,8 @@ for j in range(GRID_ALTO):
         image=tile_basico_suelo,anchor=tkinter.NW,tags="tile")
 canvas_grafo.tag_bind("tile", "<1>", repintar_tile)
 canvas_grafo.tag_bind("tile","<B1-Motion>",repintar_tile)
+canvas_grafo.tag_bind("tile", "<3>", despintar_tile)
+canvas_grafo.tag_bind("tile","<B3-Motion>",despintar_tile)
 # Creacion de los graficos de los puntos de inicio y final
 grafico_nodo_inicio = canvas_grafo.create_oval(1,1,TAMAÑO_DE_SPRITE-1,TAMAÑO_DE_SPRITE-1,fill="red",width=0)
 canvas_grafo.moveto(grafico_nodo_inicio,inicio[0]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,
