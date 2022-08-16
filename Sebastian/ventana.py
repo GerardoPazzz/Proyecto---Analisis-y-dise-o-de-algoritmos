@@ -17,8 +17,8 @@ flag_pausado=False
 flag_reiniciado=False
 
 #Configuraciones del editor de mapa (Grafo)
-GRID_ALTO=23
-GRID_ANCHO=23
+GRID_ALTO=24
+GRID_ANCHO=33
 TAMAÑO_DE_SPRITE=16
 BORDE_DE_GRID=1
 tile_cesped = tkinter.PhotoImage(file="imagenes/cesped.png")
@@ -27,10 +27,15 @@ tile_basico_suelo = tkinter.PhotoImage(file="imagenes/basico_suelo.png")
 nodo_tile_actual=tile_basico_pared
 peso_nodo_actual=1
 
-#CODIGO PARA DIJKSTRA
+#CONFIGURACION DE BUSQUEDA
 grid = [[peso_nodo_actual for i in range(GRID_ANCHO)]for j in range(GRID_ALTO)]
 inicio, final = ((0, 0), (GRID_ANCHO-1, GRID_ALTO-1))  # Configuracion del punto de inicio y final
+pos_nodo_inicio=[inicio[0]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,
+inicio[1]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID]
+pos_nodo_final=[final[0]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,
+final[1]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID]
 lista_graficos_nodos=[]
+tiempo_de_retraso=0
 #Funciones
 def pintar_tile_en_canvas(x,y,tile):
     canvas_grafo.create_image(x,y,image=tile,anchor=tkinter.NW,tag="tile")
@@ -42,8 +47,10 @@ def repintar_tile(event):
         item_nodo=canvas_grafo.find_closest(event.x,event.y)
         nodo_actual_x, nodo_actual_y = canvas_grafo.coords(item_nodo)
         #pintar_tile_en_canvas(nodo_actual_x,nodo_actual_y,nodo_tile_actual) # -> Opcion demandante
-        canvas_grafo.itemconfig(item_nodo, image=tile_basico_pared)  # -> Opcion optimizada
-        grid[int(nodo_actual_y/(TAMAÑO_DE_SPRITE+BORDE_DE_GRID))][int(nodo_actual_x/(TAMAÑO_DE_SPRITE+BORDE_DE_GRID))]=peso_nodo_actual
+        if nodo_actual_x<canvas_grafo.winfo_width() and nodo_actual_y<canvas_grafo.winfo_height():
+            if nodo_actual_x != pos_nodo_inicio[0] or nodo_actual_y != pos_nodo_inicio[1]:
+                canvas_grafo.itemconfig(item_nodo, image=tile_basico_pared)  # -> Opcion optimizada
+                grid[int(nodo_actual_y/(TAMAÑO_DE_SPRITE+BORDE_DE_GRID))][int(nodo_actual_x/(TAMAÑO_DE_SPRITE+BORDE_DE_GRID))]=peso_nodo_actual
     #print(grid)
     pass
 
@@ -54,8 +61,10 @@ def despintar_tile(event):  # Opcion temporal para mejorar el control sobre el m
         item_nodo=canvas_grafo.find_closest(event.x,event.y)
         nodo_actual_x, nodo_actual_y = canvas_grafo.coords(item_nodo)
         #pintar_tile_en_canvas(nodo_actual_x,nodo_actual_y,nodo_tile_actual) # -> Opcion demandante
-        canvas_grafo.itemconfig(item_nodo, image=tile_basico_suelo)  # -> Opcion optimizada
-        grid[int(nodo_actual_y/(TAMAÑO_DE_SPRITE+BORDE_DE_GRID))][int(nodo_actual_x/(TAMAÑO_DE_SPRITE+BORDE_DE_GRID))]=peso_nodo_actual
+        if nodo_actual_x<canvas_grafo.winfo_width() and nodo_actual_y<canvas_grafo.winfo_height():
+            if nodo_actual_x != pos_nodo_final[0] or nodo_actual_y != pos_nodo_final[1]:
+                canvas_grafo.itemconfig(item_nodo, image=tile_basico_suelo)  # -> Opcion optimizada
+                grid[int(nodo_actual_y/(TAMAÑO_DE_SPRITE+BORDE_DE_GRID))][int(nodo_actual_x/(TAMAÑO_DE_SPRITE+BORDE_DE_GRID))]=peso_nodo_actual
     #print(grid)
     pass
 
@@ -67,44 +76,46 @@ def borrar_grafo():
 
 def iniciar_busqueda():
     boton_iniciar_busqueda.config(bg="red",text="PAUSAR",command=pausar)
-    global flag_buscando
-    global flag_reiniciado
-    global flag_pausado
-    flag_buscando=True
-    tiempo=time.time()*1000
     grafo = convertir_grid(grid)
     costo_minimo = {inicio: 0}
     recorrido_de_nodos = {inicio: None}
     nodos_visitados = []
     nodo_actual = inicio
     camino = []
+    #Variables de control de proceso
+    global flag_buscando
+    global flag_reiniciado
+    global flag_pausado
+    flag_buscando = True
+    tiempo_inicio_busqueda = time.time() * 1000
+    reloj=time.time() * 1000
     # Variables para graficos
     global lista_graficos_nodos # Para manejar graficos al dibujar el proceso en el canvas, necesario para mejor rendimiento
     while nodo_actual != final and not flag_reiniciado:
         if not flag_pausado:
-            costo_minimo, recorrido_de_nodos, nodos_visitados, nodo_actual, camino = \
-                Dijkstra_v3(costo_minimo, recorrido_de_nodos, nodos_visitados, nodo_actual, grafo)
-            if nodo_actual is None:
-                messagebox.showinfo(title="Camino no existente",
-                                    message="No existe camino para llegar al punto final")
-                flag_reiniciado=True
-                break
-            label_nodo_evaluado.config(text=f"({nodo_actual[0]},{nodo_actual[1]})")
-            label_nodos_visitados.config(text=f"{len(nodos_visitados)}")
-            label_nodos_camino.config(text=f"{len(camino)}")
-            while len(lista_graficos_nodos) < len(camino):
-                lista_graficos_nodos.append(canvas_grafo.create_oval(0,0,TAMAÑO_DE_SPRITE,TAMAÑO_DE_SPRITE, fill="blue",tags="nodo_camino"))
-            canvas_grafo.itemconfig("nodo_camino",state="hidden")
-            indice_lista_graficos=0
-            for j in range(GRID_ALTO):
-                for i in range(GRID_ANCHO):
-                    if (i,j) != inicio and (i,j) != final and (i,j) in camino:
-                        canvas_grafo.itemconfig(lista_graficos_nodos[indice_lista_graficos], state="normal")
-                        canvas_grafo.moveto(lista_graficos_nodos[indice_lista_graficos],
-                                            i*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,j*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID)
-                        indice_lista_graficos+=1
-            #print(camino)
-            #time.sleep(0.1)
+            if tiempo_de_retraso<=time.time()*1000-reloj or tiempo_de_retraso==0:
+                reloj=time.time()*1000
+                costo_minimo, recorrido_de_nodos, nodos_visitados, nodo_actual, camino = \
+                    Dijkstra_v3(costo_minimo, recorrido_de_nodos, nodos_visitados, nodo_actual, grafo)
+                if nodo_actual is None:
+                    messagebox.showinfo(title="Camino no existente",
+                                        message="No existe camino para llegar al punto final")
+                    flag_reiniciado=True
+                    break
+                label_nodo_evaluado.config(text=f"({nodo_actual[0]},{nodo_actual[1]})")
+                label_nodos_visitados.config(text=f"{len(nodos_visitados)}")
+                label_nodos_camino.config(text=f"{len(camino)}")
+                while len(lista_graficos_nodos) < len(camino):
+                    lista_graficos_nodos.append(canvas_grafo.create_oval(0,0,TAMAÑO_DE_SPRITE,TAMAÑO_DE_SPRITE, fill="blue",tags="nodo_camino"))
+                canvas_grafo.itemconfig("nodo_camino",state="hidden")
+                indice_lista_graficos=0
+                for j in range(GRID_ALTO):
+                    for i in range(GRID_ANCHO):
+                        if (i,j) != inicio and (i,j) != final and (i,j) in camino:
+                            canvas_grafo.itemconfig(lista_graficos_nodos[indice_lista_graficos], state="normal")
+                            canvas_grafo.moveto(lista_graficos_nodos[indice_lista_graficos],
+                                                i*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,j*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID)
+                            indice_lista_graficos+=1
         ventana.update()
     if flag_reiniciado:
         canvas_grafo.itemconfig("nodo_camino",state="hidden")
@@ -113,7 +124,7 @@ def iniciar_busqueda():
     flag_reiniciado=False
     flag_buscando=False
     flag_pausado=False
-    label_ultima_evaluacion.config(text=f"{time.time()*1000-tiempo:.0f}")
+    label_ultima_evaluacion.config(text=f"{time.time()*1000-tiempo_inicio_busqueda:.0f}")
     boton_iniciar_busqueda.config(bg="green", text="INICIAR\nBÚSQUEDA",command=iniciar_busqueda)
     pass
 def reiniciar():
@@ -137,6 +148,7 @@ def quitar_pausa():
 # Funciones para obtener datos
 def obtener_punto_inicial(*args):
     global inicio
+    global pos_nodo_inicio
     punto=text_punto_inicial.get().strip()
     try:
         entry_punto_inicial.config(highlightbackground="white", highlightcolor="white")
@@ -152,17 +164,21 @@ def obtener_punto_inicial(*args):
                 punto_lst=list(inicio)
                 punto_lst[0],punto_lst[1]=int(x),int(y)
                 inicio=tuple(punto_lst)
-                canvas_grafo.moveto(grafico_nodo_inicio,inicio[0]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,
-                                    inicio[1]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID)
+                pos_nodo_inicio = [inicio[0] * (TAMAÑO_DE_SPRITE + BORDE_DE_GRID) + BORDE_DE_GRID,
+                inicio[1] * (TAMAÑO_DE_SPRITE + BORDE_DE_GRID) + BORDE_DE_GRID]
+                canvas_grafo.moveto(grafico_nodo_inicio,pos_nodo_inicio[0],pos_nodo_inicio[1])
+
             else:
                 raise Exception("Valores fuera del limite")
         else:
             raise Exception("Valores ingresados no son numeros")
-    except:
+    except Exception as e:
+        print(str(e))
         entry_punto_inicial.config(highlightbackground="red",highlightcolor="red")
 
 def obtener_punto_final(*args):
     global final
+    global pos_nodo_final
     punto=text_punto_final.get().strip()
     try:
         entry_punto_final.config(highlightbackground="white", highlightcolor="white")
@@ -178,14 +194,33 @@ def obtener_punto_final(*args):
                 punto_lst=list(final)
                 punto_lst[0],punto_lst[1]=int(x),int(y)
                 final=tuple(punto_lst)
-                canvas_grafo.moveto(grafico_nodo_final, final[0]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,
-                                    final[1]*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID)
+                pos_nodo_final = [final[0] * (TAMAÑO_DE_SPRITE + BORDE_DE_GRID) + BORDE_DE_GRID,
+                final[1] * (TAMAÑO_DE_SPRITE + BORDE_DE_GRID) + BORDE_DE_GRID]
+                canvas_grafo.moveto(grafico_nodo_final, pos_nodo_final[0],pos_nodo_final[1])
             else:
                 raise Exception("Valores fuera del limite")
         else:
             raise Exception("Valores ingresados no son numeros")
-    except:
+    except Exception as e:
+        print(str(e))
         entry_punto_final.config(highlightbackground="red",highlightcolor="red")
+
+def obtener_tiempo_de_retraso(*args):
+    global tiempo_de_retraso
+    str_tiempo = text_tiempo_de_retraso.get().strip()
+    try:
+        entry_tiempo_de_retraso.config(highlightbackground="white", highlightcolor="white")
+        if str_tiempo.isdigit():
+            numero_tiempo_milisegundos=int(str_tiempo)
+            if numero_tiempo_milisegundos>=0:
+                tiempo_de_retraso=numero_tiempo_milisegundos
+            else:
+                raise Exception("Tiempo ingresado es negativo")
+        else:
+            raise Exception("Valores ingresados no son numeros")
+    except Exception as e:
+        print(str(e))
+        entry_tiempo_de_retraso.config(highlightbackground="red",highlightcolor="red")
 
 def cambiar_tamaño_canvas_grafo(alto,ancho):
     canvas_grafo.config(width=ancho*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,height=alto*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID,bg="gray")
@@ -196,7 +231,12 @@ def cambiar_tamaño_canvas_grafo(alto,ancho):
     for j in range(alto):
         fila=[]
         for i in range(ancho):
-            fila.append(grid[j][i])
+            if j < GRID_ALTO and i<GRID_ANCHO:
+                fila.append(grid[j][i])
+            else:
+                fila.append(1)
+                item_nodo = canvas_grafo.find_closest(i*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID, j*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)+BORDE_DE_GRID)
+                canvas_grafo.itemconfig(item_nodo, image=tile_basico_suelo)  # -> Opcion optimizada
         nuevo_grid.append(fila)
     grid=nuevo_grid
     GRID_ALTO=alto
@@ -221,22 +261,16 @@ def obtener_tamaño_grafo(*args):
                 if int(ancho)*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)<contenedor_grafo.winfo_width() and \
                     int(alto)*(TAMAÑO_DE_SPRITE+BORDE_DE_GRID)<contenedor_grafo.winfo_height():
                     cambiar_tamaño_canvas_grafo(int(alto),int(ancho))
-                    """canvas_grafo.moveto(grafico_nodo_final,
-                                        (ancho-1) * (TAMAÑO_DE_SPRITE + BORDE_DE_GRID) + BORDE_DE_GRID,
-                                        (alto-1) * (TAMAÑO_DE_SPRITE + BORDE_DE_GRID) + BORDE_DE_GRID)
-                    punto_lst = list(final)
-                    punto_lst[0], punto_lst[1] = int(ancho-1), int(alto-1)
-                    final = tuple(punto_lst)
                     entry_punto_final.delete(0,tkinter.END)
-                    entry_punto_final.insert(tkinter.END,f"({final[0]}x{final[1]})")"""
+                    entry_punto_final.insert(tkinter.END,f"({int(ancho)-1},{int(alto)-1})")
                 else:
                     raise Exception("Valores fuera del limite del contenedor de grafo")
             else:
                 raise Exception("Valores no aceptados para grafo")
         else:
             raise Exception("Valores ingresados no son numeros")
-    except(Exception):
-        print(Exception)
+    except Exception as e:
+        print(str(e))
         entry_tamaño_grafo.config(highlightbackground="red", highlightcolor="red")
 
 
@@ -264,9 +298,9 @@ framegrafo.pack(side=tkinter.BOTTOM, padx=(10, 10), pady=10)
 
 # Elementos de frame de grafo
 # Frame de grafo (Panel que pondra limites al grafo)
-contenedor_grafo=tkinter.Frame(framegrafo,bg=GRIS_OSCURO, highlightbackground="gray", highlightthickness=1,height=416)
+contenedor_grafo=tkinter.Frame(framegrafo,bg=GRIS_OSCURO,height=416)
 contenedor_grafo.pack_propagate(False)
-contenedor_grafo.pack(side=tkinter.TOP, padx=5, pady=(5,0),fill=tkinter.BOTH)
+contenedor_grafo.pack(side=tkinter.TOP, padx=5, pady=(1,0),fill=tkinter.BOTH)
 # Canvas de grafo (Donde se dibujara el grafo)
 canvas_grafo = tkinter.Canvas(contenedor_grafo, highlightthickness=0)
 #canvas_grafo.config(width=0, height=0)
@@ -275,7 +309,7 @@ canvas_grafo.pack()
 # Frame de configuracion de grafo
 configuracion_de_grafo = tkinter.Frame(framegrafo, bg=GRIS_OSCURO,highlightbackground="gray", highlightthickness=1)
 configuracion_de_grafo.config(width=150, height=120)
-configuracion_de_grafo.pack(side=tkinter.LEFT, padx=(5, 5), pady=5,fill=tkinter.Y)
+configuracion_de_grafo.pack(side=tkinter.LEFT, padx=(5, 5), pady=(3,5),fill=tkinter.Y)
 #Variables de control
 text_punto_inicial=tkinter.StringVar()
 text_punto_inicial.set(f"({inicio[0]},{inicio[1]})")
@@ -299,22 +333,28 @@ entry_tamaño_grafo.grid(row=4,column=1,sticky="w")
 tkinter.Label(configuracion_de_grafo,text="Tamaño de imagen:",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=5,column=0,sticky="e")
 label_tamaño_imagen = tkinter.Label(configuracion_de_grafo,text="16 px",fg="white",bg=GRIS_OSCURO,font=fuente_opciones)
 label_tamaño_imagen.grid(row=5,column=1,sticky="w")
-tkinter.Label(configuracion_de_grafo,text="Mostrar rejilla",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=6,column=0,sticky="e")
-boton_aceptar_cambios = tkinter.Button(configuracion_de_grafo, text="Aceptar", bg="gray",command=obtener_tamaño_grafo)
-boton_aceptar_cambios.grid(row=7,column=0,sticky="we")
-boton_borrar_grafo = tkinter.Button(configuracion_de_grafo, text="Borrar grafo", bg="gray",command=borrar_grafo)
-boton_borrar_grafo.grid(row=7,column=1)
+boton_aceptar_cambios = tkinter.Button(configuracion_de_grafo, text="Aceptar", bg="gray",command=obtener_tamaño_grafo,height=2)
+boton_aceptar_cambios.grid(row=6,column=0,sticky="we")
+boton_borrar_grafo = tkinter.Button(configuracion_de_grafo, text="Borrar grafo", bg="gray",command=borrar_grafo,height=2)
+boton_borrar_grafo.grid(row=6,column=1,sticky="we")
+
+
 # Frame de configuracion de busqueda
 configuracion_de_busqueda = tkinter.Frame(framegrafo, bg=GRIS_OSCURO,highlightbackground="gray", highlightthickness=1)
 configuracion_de_busqueda.config(width=150, height=120)
-configuracion_de_busqueda.pack(side=tkinter.LEFT, padx=(0, 5), pady=5,fill=tkinter.Y)
-
+configuracion_de_busqueda.pack(side=tkinter.LEFT, padx=(0, 5), pady=(3,5),fill=tkinter.Y)
+#Variables de control
+text_tiempo_de_retraso=tkinter.StringVar()
+text_tiempo_de_retraso.set(f"{tiempo_de_retraso}")
+text_tiempo_de_retraso.trace("w",obtener_tiempo_de_retraso)
+#Labels y Entrys
 tkinter.Label(configuracion_de_busqueda,text="            CONFIGURACIÓN DE BÚSQUEDA            ",fg="white",bg=GRIS_OSCURO,font=fuente_titulo).grid(row=0,columnspan=2)
 tkinter.Label(configuracion_de_busqueda,text="Nodo evaluado:",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=1,column=0,sticky="e")
 label_nodo_evaluado=tkinter.Label(configuracion_de_busqueda,text="(0,0)",fg="white",bg=GRIS_OSCURO,font=fuente_opciones)
 label_nodo_evaluado.grid(row=1,column=1,sticky="w")
 tkinter.Label(configuracion_de_busqueda,text="Tiempo de retraso(ms):",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=2,column=0,sticky="e")
-tkinter.Entry(configuracion_de_busqueda,width=8).grid(row=2,column=1,sticky="w")
+entry_tiempo_de_retraso = tkinter.Entry(configuracion_de_busqueda,width=8,textvariable=text_tiempo_de_retraso,bd=0,highlightbackground="white",highlightcolor="white",highlightthickness=1)
+entry_tiempo_de_retraso.grid(row=2,column=1,sticky="w")
 tkinter.Label(configuracion_de_busqueda,text="Número de nodos visitados:",fg="white",bg=GRIS_OSCURO,font=fuente_opciones).grid(row=3,column=0,sticky="e")
 label_nodos_visitados=tkinter.Label(configuracion_de_busqueda,text="0",fg="white",bg=GRIS_OSCURO,font=fuente_opciones)
 label_nodos_visitados.grid(row=3,column=1,sticky="w")
@@ -333,7 +373,7 @@ boton_reiniciar.pack(side=tkinter.TOP, padx=(0, 3), pady=5)
 # Boton de iniciar busqueda
 boton_iniciar_busqueda = tkinter.Button(framegrafo, text="INICIAR\nBÚSQUEDA", bg="green",command=iniciar_busqueda)
 boton_iniciar_busqueda.config(width=14, height=4)
-boton_iniciar_busqueda.pack(side=tkinter.BOTTOM, padx=(0, 3), pady=(0, 5))
+boton_iniciar_busqueda.pack(side=tkinter.BOTTOM, padx=(0, 3), pady=(0, 3))
 
 # Elementos de frame de nodos
 editor_de_nodos = tkinter.Frame(framenodos, bg=GRIS_OSCURO, highlightbackground="gray", highlightthickness=1)
